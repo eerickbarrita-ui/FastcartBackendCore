@@ -1,12 +1,20 @@
 ﻿using FastCartBackendCore.Models;
 using FastCartBackendCore.Services;
 
-Console.WriteLine("==============================================");
-Console.WriteLine("     FASTCART BACKEND CORE - FASE 3");
-Console.WriteLine("==============================================\n");
+Console.Title = "FastCart Backend Core - Motor Logístico v4.0";
+
+// ============================================================
+// SERVICIOS CENTRALES
+// ============================================================
 
 AuditoriaService auditoria = new AuditoriaService();
 InventarioLista inventario = new InventarioLista(auditoria);
+ColaDespacho colaDespacho = new ColaDespacho();
+PilaDevoluciones pilaDevoluciones = new PilaDevoluciones();
+
+// ============================================================
+// PROVEEDORES BASE
+// ============================================================
 
 Proveedor proveedor1 = new Proveedor
 {
@@ -25,6 +33,10 @@ Proveedor proveedor3 = new Proveedor
     IdProveedor = 3,
     NombreCorporativo = "Proveedor Sur"
 };
+
+// ============================================================
+// CATÁLOGO BASE
+// ============================================================
 
 Producto[] productos =
 {
@@ -150,99 +162,446 @@ Producto[] productos =
     }
 };
 
-Console.WriteLine("REGISTRO INICIAL DE PRODUCTOS\n");
-
+// Carga inicial del catálogo utilizando la lista enlazada.
 foreach (Producto producto in productos)
 {
     inventario.InsertarOrdenado(producto);
 }
 
-Console.WriteLine("CATÁLOGO ORDENADO POR PRECIO ASCENDENTE");
-Console.WriteLine();
+// ============================================================
+// MENÚ MAESTRO
+// ============================================================
 
-inventario.MostrarProductos();
+bool ejecutando = true;
 
-Console.WriteLine("\n==============================================");
-Console.WriteLine("BÚSQUEDA DE PRODUCTO");
-Console.WriteLine("==============================================");
-
-try
+while (ejecutando)
 {
-    Producto encontrado = inventario.BuscarPorSKU(1008);
+    Console.WriteLine();
+    Console.WriteLine("╔════════════════════════════════════════════════╗");
+    Console.WriteLine("║       FASTCART BACKEND CORE - FASE 4          ║");
+    Console.WriteLine("║          MOTOR LOGÍSTICO v4.0                 ║");
+    Console.WriteLine("╠════════════════════════════════════════════════╣");
+    Console.WriteLine("║ FASE 1 Y 2 - CATÁLOGO / LISTA ENLAZADA       ║");
+    Console.WriteLine("║  1. Mostrar catálogo                          ║");
+    Console.WriteLine("║  2. Buscar producto por SKU                   ║");
+    Console.WriteLine("║  3. Modificar precio                          ║");
+    Console.WriteLine("║  4. Eliminar producto                         ║");
+    Console.WriteLine("╠════════════════════════════════════════════════╣");
+    Console.WriteLine("║ FASE 3 - AUDITORÍA BIDIRECCIONAL              ║");
+    Console.WriteLine("║  5. Ver historial cronológico                 ║");
+    Console.WriteLine("║  6. Ver historial inverso                     ║");
+    Console.WriteLine("║  7. Validar integridad de auditoría            ║");
+    Console.WriteLine("╠════════════════════════════════════════════════╣");
+    Console.WriteLine("║ FASE 4 - COLA FIFO / PILA LIFO                ║");
+    Console.WriteLine("║  8. Encolar pedido                            ║");
+    Console.WriteLine("║  9. Despachar pedido                          ║");
+    Console.WriteLine("║ 10. Registrar devolución                      ║");
+    Console.WriteLine("║ 11. Procesar devolución                       ║");
+    Console.WriteLine("║ 12. Estado de cola y pila                     ║");
+    Console.WriteLine("╠════════════════════════════════════════════════╣");
+    Console.WriteLine("║  0. Salir                                     ║");
+    Console.WriteLine("╚════════════════════════════════════════════════╝");
 
-    Console.WriteLine("Producto encontrado:");
-    Console.WriteLine($"SKU: {encontrado.SKU}");
-    Console.WriteLine($"Nombre: {encontrado.Nombre}");
-    Console.WriteLine($"Precio: ${encontrado.Precio:F2}");
-    Console.WriteLine($"Stock: {encontrado.Stock}");
+    int opcion = LeerEntero("Seleccione una opción: ");
+
+    Console.WriteLine();
+
+    try
+    {
+        switch (opcion)
+        {
+            // ====================================================
+            // FASE 1 Y 2
+            // ====================================================
+
+            case 1:
+                Console.WriteLine("=== CATÁLOGO DE PRODUCTOS ===");
+                Console.WriteLine();
+
+                inventario.MostrarProductos();
+                break;
+
+            case 2:
+            {
+                Console.WriteLine("=== BÚSQUEDA POR SKU ===");
+
+                int sku = LeerEntero("SKU: ");
+
+                Producto producto =
+                    inventario.BuscarPorSKU(sku);
+
+                Console.WriteLine();
+                Console.WriteLine("Producto encontrado:");
+                Console.WriteLine($"SKU: {producto.SKU}");
+                Console.WriteLine($"Nombre: {producto.Nombre}");
+                Console.WriteLine($"Precio: ${producto.Precio:F2}");
+                Console.WriteLine($"Stock: {producto.Stock}");
+                Console.WriteLine(
+                    $"Proveedor: {producto.DatosProveedor.NombreCorporativo}");
+
+                break;
+            }
+
+            case 3:
+            {
+                Console.WriteLine("=== MODIFICAR PRECIO ===");
+
+                int sku =
+                    LeerEntero("SKU: ");
+
+                double nuevoPrecio =
+                    LeerDouble("Nuevo precio: $");
+
+                inventario.ModificarPrecio(
+                    sku,
+                    nuevoPrecio);
+
+                Console.WriteLine(
+                    "Precio actualizado correctamente.");
+
+                break;
+            }
+
+            case 4:
+            {
+                Console.WriteLine("=== ELIMINAR PRODUCTO ===");
+
+                int sku =
+                    LeerEntero("SKU: ");
+
+                bool eliminado =
+                    inventario.EliminarPorSKU(sku);
+
+                if (eliminado)
+                {
+                    Console.WriteLine(
+                        $"Producto con SKU {sku} eliminado.");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"No existe un producto con SKU {sku}.");
+                }
+
+                break;
+            }
+
+            // ====================================================
+            // FASE 3
+            // ====================================================
+
+            case 5:
+                Console.WriteLine(
+                    "=== HISTORIAL CRONOLÓGICO ===");
+
+                auditoria.ImprimirHistorial();
+                break;
+
+            case 6:
+                Console.WriteLine(
+                    "=== HISTORIAL INVERSO ===");
+
+                auditoria.ImprimirHistorialInverso();
+                break;
+
+            case 7:
+            {
+                Console.WriteLine(
+                    "=== VALIDACIÓN DE INTEGRIDAD ===");
+
+                bool integridad =
+                    auditoria.ValidarIntegridad();
+
+                Console.WriteLine(
+                    integridad
+                        ? "La lista de auditoría es estructuralmente válida."
+                        : "ERROR: La lista presenta inconsistencias.");
+
+                Console.WriteLine(
+                    $"Total de registros: {auditoria.TotalRegistros}");
+
+                break;
+            }
+
+            // ====================================================
+            // FASE 4 - COLA FIFO
+            // ====================================================
+
+            case 8:
+            {
+                Console.WriteLine(
+                    "=== ENCOLAR NUEVO PEDIDO (FIFO) ===");
+
+                int idPedido =
+                    LeerEntero("ID del pedido: ");
+
+                int sku =
+                    LeerEntero("SKU del producto: ");
+
+                int cantidad =
+                    LeerEntero("Cantidad: ");
+
+                string cliente =
+                    LeerTexto("Cliente: ");
+
+                if (cantidad <= 0)
+                {
+                    Console.WriteLine(
+                        "La cantidad debe ser mayor que cero.");
+
+                    break;
+                }
+
+                // Comprobamos primero que el SKU exista.
+                inventario.BuscarPorSKU(sku);
+
+                Pedido pedido =
+                    new Pedido(
+                        idPedido,
+                        sku,
+                        cantidad,
+                        cliente);
+
+                colaDespacho.EncolarPedido(pedido);
+
+                break;
+            }
+
+            case 9:
+            {
+                Console.WriteLine(
+                    "=== DESPACHAR PEDIDO (FIFO) ===");
+
+                Pedido? pedido =
+                    colaDespacho.DespacharPedido(
+                        inventario,
+                        auditoria);
+
+                if (pedido != null)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(
+                        $"Pedido #{pedido.IdPedido} procesado.");
+
+                    Producto actualizado =
+                        inventario.BuscarPorSKU(
+                            pedido.SKU);
+
+                    Console.WriteLine(
+                        $"Stock actual del SKU {pedido.SKU}: " +
+                        $"{actualizado.Stock}");
+                }
+
+                break;
+            }
+
+            // ====================================================
+            // FASE 4 - PILA LIFO
+            // ====================================================
+
+            case 10:
+            {
+                Console.WriteLine(
+                    "=== REGISTRAR DEVOLUCIÓN (LIFO) ===");
+
+                int idDevolucion =
+                    LeerEntero("ID de devolución: ");
+
+                int sku =
+                    LeerEntero("SKU: ");
+
+                int cantidad =
+                    LeerEntero("Cantidad devuelta: ");
+
+                string cliente =
+                    LeerTexto("Cliente: ");
+
+                string motivo =
+                    LeerTexto("Motivo: ");
+
+                if (cantidad <= 0)
+                {
+                    Console.WriteLine(
+                        "La cantidad debe ser mayor que cero.");
+
+                    break;
+                }
+
+                // Validación previa del SKU.
+                inventario.BuscarPorSKU(sku);
+
+                Devolucion devolucion =
+                    new Devolucion
+                    {
+                        IdDevolucion = idDevolucion,
+                        SKU = sku,
+                        Cantidad = cantidad,
+                        Cliente = cliente,
+                        Motivo = motivo,
+                        FechaHora = DateTime.UtcNow
+                    };
+
+                pilaDevoluciones.PushDevolucion(
+                    devolucion);
+
+                break;
+            }
+
+            case 11:
+            {
+                Console.WriteLine(
+                    "=== PROCESAR DEVOLUCIÓN (LIFO) ===");
+
+                Devolucion? devolucion =
+                    pilaDevoluciones.PopDevolucion(
+                        inventario,
+                        auditoria);
+
+                if (devolucion != null)
+                {
+                    Console.WriteLine();
+
+                    Producto actualizado =
+                        inventario.BuscarPorSKU(
+                            devolucion.SKU);
+
+                    Console.WriteLine(
+                        $"Stock actual del SKU {devolucion.SKU}: " +
+                        $"{actualizado.Stock}");
+                }
+
+                break;
+            }
+
+            case 12:
+                Console.WriteLine(
+                    "=== ESTADO DEL MOTOR LOGÍSTICO ===");
+
+                Console.WriteLine(
+                    $"Pedidos pendientes en cola: " +
+                    $"{colaDespacho.TotalEncolados}");
+
+                Console.WriteLine(
+                    $"Devoluciones pendientes en pila: " +
+                    $"{pilaDevoluciones.TotalDevoluciones}");
+
+                Console.WriteLine(
+                    $"Registros de auditoría: " +
+                    $"{auditoria.TotalRegistros}");
+
+                Console.WriteLine(
+                    $"Integridad de auditoría: " +
+                    $"{(auditoria.ValidarIntegridad() ? "OK" : "ERROR")}");
+
+                break;
+
+            case 0:
+                Console.WriteLine(
+                    "Cerrando FastCart Backend Core...");
+
+                ejecutando = false;
+                break;
+
+            default:
+                Console.WriteLine(
+                    "Opción no válida.");
+                break;
+        }
+    }
+    catch (KeyNotFoundException ex)
+    {
+        Console.WriteLine(
+            $"ERROR: {ex.Message}");
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        Console.WriteLine(
+            $"ERROR: {ex.Message}");
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.WriteLine(
+            $"ERROR: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"ERROR NO CONTROLADO: {ex.Message}");
+    }
+
+    if (ejecutando)
+    {
+        Console.WriteLine();
+        Console.WriteLine(
+            "Presione ENTER para regresar al menú...");
+
+        Console.ReadLine();
+
+        Console.Clear();
+    }
 }
-catch (KeyNotFoundException ex)
+
+// ============================================================
+// MÉTODOS AUXILIARES DEL MENÚ
+// ============================================================
+
+static int LeerEntero(string mensaje)
 {
-    Console.WriteLine(ex.Message);
+    while (true)
+    {
+        Console.Write(mensaje);
+
+        string? entrada =
+            Console.ReadLine();
+
+        if (int.TryParse(
+                entrada,
+                out int resultado))
+        {
+            return resultado;
+        }
+
+        Console.WriteLine(
+            "Valor inválido. Ingrese un número entero.");
+    }
 }
 
-Console.WriteLine("\n==============================================");
-Console.WriteLine("ACTUALIZACIÓN DE PRECIO");
-Console.WriteLine("==============================================");
-
-try
+static double LeerDouble(string mensaje)
 {
-    inventario.ModificarPrecio(1008, 6999.00);
+    while (true)
+    {
+        Console.Write(mensaje);
 
-    Console.WriteLine(
-        "El precio del producto con SKU 1008 fue actualizado correctamente.");
+        string? entrada =
+            Console.ReadLine();
+
+        if (double.TryParse(
+                entrada,
+                out double resultado))
+        {
+            return resultado;
+        }
+
+        Console.WriteLine(
+            "Valor inválido. Ingrese un número.");
+    }
 }
-catch (KeyNotFoundException ex)
+
+static string LeerTexto(string mensaje)
 {
-    Console.WriteLine(ex.Message);
+    while (true)
+    {
+        Console.Write(mensaje);
+
+        string? entrada =
+            Console.ReadLine();
+
+        if (!string.IsNullOrWhiteSpace(entrada))
+        {
+            return entrada.Trim();
+        }
+
+        Console.WriteLine(
+            "El texto no puede estar vacío.");
+    }
 }
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine("ELIMINACIÓN DE PRODUCTO");
-Console.WriteLine("==============================================");
-
-bool eliminado = inventario.EliminarPorSKU(1005);
-
-if (eliminado)
-{
-    Console.WriteLine("El producto con SKU 1005 fue eliminado.");
-}
-else
-{
-    Console.WriteLine("El producto no fue encontrado.");
-}
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine("PRUEBA DE SKU INEXISTENTE");
-Console.WriteLine("==============================================");
-
-try
-{
-    inventario.BuscarPorSKU(9999);
-}
-catch (KeyNotFoundException ex)
-{
-    Console.WriteLine($"Excepción controlada: {ex.Message}");
-}
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine("CATÁLOGO FINAL");
-Console.WriteLine("==============================================\n");
-
-inventario.MostrarProductos();
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine("HISTORIAL CRONOLÓGICO DE AUDITORÍA");
-Console.WriteLine("==============================================");
-
-auditoria.ImprimirHistorial();
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine("HISTORIAL INVERSO DE AUDITORÍA");
-Console.WriteLine("==============================================");
-
-auditoria.ImprimirHistorialInverso();
-
-Console.WriteLine("\n==============================================");
-Console.WriteLine($"TOTAL DE REGISTROS DE AUDITORÍA: {auditoria.TotalRegistros}");
-Console.WriteLine("==============================================");
