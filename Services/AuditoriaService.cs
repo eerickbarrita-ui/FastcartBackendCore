@@ -9,7 +9,13 @@ public class AuditoriaService
 
     public int TotalRegistros { get; private set; }
 
-    public void RegistrarEvento(string tipoOperacion, int productoId, string referencia)
+    /// <summary>
+    /// Registra un nuevo evento al final de la lista doblemente enlazada.
+    /// </summary>
+    public void RegistrarEvento(
+        string tipoOperacion,
+        int productoId,
+        string referencia)
     {
         LogMovimiento movimiento = new LogMovimiento
         {
@@ -28,23 +34,35 @@ public class AuditoriaService
         }
         else
         {
+            // 1. El nuevo nodo apunta hacia la cola anterior.
             nuevoNodo.Anterior = _cola;
+
+            // 2. La cola anterior apunta hacia el nuevo nodo.
             _cola!.Siguiente = nuevoNodo;
+
+            // 3. El nuevo nodo se convierte en la nueva cola.
             _cola = nuevoNodo;
         }
 
         TotalRegistros++;
     }
 
+    /// <summary>
+    /// Imprime el historial desde el evento más antiguo
+    /// hasta el evento más reciente.
+    /// </summary>
     public void ImprimirHistorial()
     {
         if (_cabeza == null)
         {
-            Console.WriteLine("No existen registros de auditoría.");
+            Console.WriteLine(
+                "No existen registros de auditoría.");
+
             return;
         }
 
-        Console.WriteLine("\n=== HISTORIAL DE AUDITORÍA ===");
+        Console.WriteLine(
+            "\n=== HISTORIAL DE AUDITORÍA ===");
 
         NodoAuditoria? actual = _cabeza;
 
@@ -60,18 +78,26 @@ public class AuditoriaService
             actual = actual.Siguiente;
         }
 
-        Console.WriteLine($"Total de registros: {TotalRegistros}");
+        Console.WriteLine(
+            $"Total de registros: {TotalRegistros}");
     }
 
+    /// <summary>
+    /// Imprime el historial desde el evento más reciente
+    /// hasta el evento más antiguo.
+    /// </summary>
     public void ImprimirHistorialInverso()
     {
         if (_cola == null)
         {
-            Console.WriteLine("No existen registros de auditoría.");
+            Console.WriteLine(
+                "No existen registros de auditoría.");
+
             return;
         }
 
-        Console.WriteLine("\n=== HISTORIAL INVERSO DE AUDITORÍA ===");
+        Console.WriteLine(
+            "\n=== HISTORIAL INVERSO DE AUDITORÍA ===");
 
         NodoAuditoria? actual = _cola;
 
@@ -87,6 +113,36 @@ public class AuditoriaService
             actual = actual.Anterior;
         }
 
-        Console.WriteLine($"Total de registros: {TotalRegistros}");
+        Console.WriteLine(
+            $"Total de registros: {TotalRegistros}");
+    }
+
+    /// <summary>
+    /// Verifica que la lista tenga la misma cantidad de nodos
+    /// al recorrerla hacia adelante y hacia atrás.
+    /// </summary>
+    public bool ValidarIntegridad()
+    {
+        int conteoAdelante = 0;
+        int conteoAtras = 0;
+
+        NodoAuditoria? actual = _cabeza;
+
+        while (actual != null)
+        {
+            conteoAdelante++;
+            actual = actual.Siguiente;
+        }
+
+        actual = _cola;
+
+        while (actual != null)
+        {
+            conteoAtras++;
+            actual = actual.Anterior;
+        }
+
+        return conteoAdelante == conteoAtras &&
+               conteoAdelante == TotalRegistros;
     }
 }
