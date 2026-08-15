@@ -1,63 +1,211 @@
-﻿using System.Diagnostics;
-using FastCartBackendCore.Models;
+﻿using FastCartBackendCore.Models;
 using FastCartBackendCore.Services;
-using FastCartBackendCore.Utilities;
 
-Producto[] catalogo = CatalogoGenerator.GenerarCatalogo(50);
+Console.WriteLine("==============================================");
+Console.WriteLine("     FASTCART BACKEND CORE - FASE 2");
+Console.WriteLine("==============================================\n");
 
-Console.WriteLine("==============================================================");
-Console.WriteLine("        FASTCART BACKEND CORE - FASE 1");
-Console.WriteLine("==============================================================");
-Console.WriteLine($"Total de productos: {catalogo.Length}");
+InventarioLista inventario = new InventarioLista();
 
-Console.WriteLine("\n========== PRIMEROS 10 PRODUCTOS (ANTES DE ORDENAR) ==========\n");
-MostrarCatalogo(catalogo, 10);
-
-Stopwatch cronometro = Stopwatch.StartNew();
-
-OrdenamientoService.ShellSort(catalogo);
-
-cronometro.Stop();
-
-Console.WriteLine("\n========== PRIMEROS 10 PRODUCTOS (DESPUÉS DE ORDENAR) ==========\n");
-MostrarCatalogo(catalogo, 10);
-
-Console.WriteLine("\n========== PRODUCTOS CON PRECIO $2,500.00 ==========\n");
-
-foreach (Producto producto in catalogo)
+Proveedor proveedor1 = new Proveedor
 {
-    if (producto.Precio == 2500.00)
+    IdProveedor = 1,
+    NombreCorporativo = "Proveedor Norte"
+};
+
+Proveedor proveedor2 = new Proveedor
+{
+    IdProveedor = 2,
+    NombreCorporativo = "Proveedor Centro"
+};
+
+Proveedor proveedor3 = new Proveedor
+{
+    IdProveedor = 3,
+    NombreCorporativo = "Proveedor Sur"
+};
+
+Producto[] productos =
+{
+    new Producto
     {
-        Console.WriteLine($"SKU: {producto.SKU}  Precio: {producto.Precio:C}");
+        SKU = 1001,
+        Nombre = "Laptop",
+        Precio = 15999.00,
+        Stock = 8,
+        DatosProveedor = proveedor1
+    },
+    new Producto
+    {
+        SKU = 1002,
+        Nombre = "Monitor",
+        Precio = 4299.00,
+        Stock = 15,
+        DatosProveedor = proveedor2
+    },
+    new Producto
+    {
+        SKU = 1003,
+        Nombre = "Teclado",
+        Precio = 899.00,
+        Stock = 30,
+        DatosProveedor = proveedor3
+    },
+    new Producto
+    {
+        SKU = 1004,
+        Nombre = "Mouse",
+        Precio = 499.00,
+        Stock = 40,
+        DatosProveedor = proveedor1
+    },
+    new Producto
+    {
+        SKU = 1005,
+        Nombre = "Impresora",
+        Precio = 3199.00,
+        Stock = 12,
+        DatosProveedor = proveedor2
+    },
+    new Producto
+    {
+        SKU = 1006,
+        Nombre = "Webcam",
+        Precio = 1299.00,
+        Stock = 18,
+        DatosProveedor = proveedor3
+    },
+    new Producto
+    {
+        SKU = 1007,
+        Nombre = "Router",
+        Precio = 1899.00,
+        Stock = 22,
+        DatosProveedor = proveedor1
+    },
+    new Producto
+    {
+        SKU = 1008,
+        Nombre = "Tablet",
+        Precio = 7499.00,
+        Stock = 10,
+        DatosProveedor = proveedor2
+    },
+    new Producto
+    {
+        SKU = 1009,
+        Nombre = "Smartphone",
+        Precio = 11999.00,
+        Stock = 14,
+        DatosProveedor = proveedor3
+    },
+    new Producto
+    {
+        SKU = 1010,
+        Nombre = "Bocina",
+        Precio = 999.00,
+        Stock = 25,
+        DatosProveedor = proveedor1
+    },
+    new Producto
+    {
+        SKU = 1011,
+        Nombre = "Audifonos",
+        Precio = 1499.00,
+        Stock = 35,
+        DatosProveedor = proveedor2
+    },
+    new Producto
+    {
+        SKU = 1012,
+        Nombre = "Disco SSD",
+        Precio = 2199.00,
+        Stock = 20,
+        DatosProveedor = proveedor3
+    },
+    new Producto
+    {
+        SKU = 1013,
+        Nombre = "Memoria RAM",
+        Precio = 1699.00,
+        Stock = 28,
+        DatosProveedor = proveedor1
+    },
+    new Producto
+    {
+        SKU = 1014,
+        Nombre = "Proyector",
+        Precio = 8999.00,
+        Stock = 6,
+        DatosProveedor = proveedor2
+    },
+    new Producto
+    {
+        SKU = 1015,
+        Nombre = "Microfono",
+        Precio = 2499.00,
+        Stock = 16,
+        DatosProveedor = proveedor3
     }
+};
+
+foreach (Producto producto in productos)
+{
+    inventario.InsertarOrdenado(producto);
 }
 
-Console.WriteLine("\n========== TIEMPO DE EJECUCIÓN ==========");
+Console.WriteLine("CATÁLOGO ORDENADO POR PRECIO ASCENDENTE");
+Console.WriteLine();
 
-Console.WriteLine($"Milisegundos : {cronometro.ElapsedMilliseconds}");
+inventario.MostrarProductos();
 
-double microsegundos =
-    cronometro.ElapsedTicks * 1_000_000.0 / Stopwatch.Frequency;
+Console.WriteLine("\n==============================================");
+Console.WriteLine("BÚSQUEDA DE PRODUCTO");
+Console.WriteLine("==============================================");
 
-Console.WriteLine($"Microsegundos: {microsegundos:F2}");
-
-Console.WriteLine($"Ticks        : {cronometro.ElapsedTicks}");
-
-static void MostrarCatalogo(Producto[] catalogo, int cantidad)
+try
 {
-    Console.WriteLine("SKU\tPrecio\t\tStock\tProveedor");
+    Producto encontrado = inventario.BuscarPorSKU(1008);
 
-    Console.WriteLine("--------------------------------------------------------------");
-
-    for (int i = 0; i < cantidad && i < catalogo.Length; i++)
-    {
-        Producto producto = catalogo[i];
-
-        Console.WriteLine(
-            $"{producto.SKU}\t" +
-            $"{producto.Precio,10:C}\t" +
-            $"{producto.Stock,3}\t" +
-            $"{producto.DatosProveedor.NombreCorporativo}"
-        );
-    }
+    Console.WriteLine($"Producto encontrado:");
+    Console.WriteLine($"SKU: {encontrado.SKU}");
+    Console.WriteLine($"Nombre: {encontrado.Nombre}");
+    Console.WriteLine($"Precio: ${encontrado.Precio:F2}");
+    Console.WriteLine($"Stock: {encontrado.Stock}");
 }
+catch (KeyNotFoundException ex)
+{
+    Console.WriteLine(ex.Message);
+}
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine("PRUEBA DE SKU INEXISTENTE");
+Console.WriteLine("==============================================");
+
+try
+{
+    inventario.BuscarPorSKU(9999);
+}
+catch (KeyNotFoundException ex)
+{
+    Console.WriteLine($"Excepción controlada: {ex.Message}");
+}
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine("ELIMINACIÓN DE PRODUCTO");
+Console.WriteLine("==============================================");
+
+bool eliminado = inventario.EliminarPorSKU(1005);
+
+if (eliminado)
+{
+    Console.WriteLine("El producto con SKU 1005 fue eliminado.");
+}
+else
+{
+    Console.WriteLine("El producto no fue encontrado.");
+}
+
+Console.WriteLine("\nCATÁLOGO DESPUÉS DE LA ELIMINACIÓN\n");
+
+inventario.MostrarProductos();
