@@ -2,10 +2,11 @@
 using FastCartBackendCore.Services;
 
 Console.WriteLine("==============================================");
-Console.WriteLine("     FASTCART BACKEND CORE - FASE 2");
+Console.WriteLine("     FASTCART BACKEND CORE - FASE 3");
 Console.WriteLine("==============================================\n");
 
-InventarioLista inventario = new InventarioLista();
+AuditoriaService auditoria = new AuditoriaService();
+InventarioLista inventario = new InventarioLista(auditoria);
 
 Proveedor proveedor1 = new Proveedor
 {
@@ -149,6 +150,8 @@ Producto[] productos =
     }
 };
 
+Console.WriteLine("REGISTRO INICIAL DE PRODUCTOS\n");
+
 foreach (Producto producto in productos)
 {
     inventario.InsertarOrdenado(producto);
@@ -167,7 +170,7 @@ try
 {
     Producto encontrado = inventario.BuscarPorSKU(1008);
 
-    Console.WriteLine($"Producto encontrado:");
+    Console.WriteLine("Producto encontrado:");
     Console.WriteLine($"SKU: {encontrado.SKU}");
     Console.WriteLine($"Nombre: {encontrado.Nombre}");
     Console.WriteLine($"Precio: ${encontrado.Precio:F2}");
@@ -179,16 +182,19 @@ catch (KeyNotFoundException ex)
 }
 
 Console.WriteLine("\n==============================================");
-Console.WriteLine("PRUEBA DE SKU INEXISTENTE");
+Console.WriteLine("ACTUALIZACIÓN DE PRECIO");
 Console.WriteLine("==============================================");
 
 try
 {
-    inventario.BuscarPorSKU(9999);
+    inventario.ModificarPrecio(1008, 6999.00);
+
+    Console.WriteLine(
+        "El precio del producto con SKU 1008 fue actualizado correctamente.");
 }
 catch (KeyNotFoundException ex)
 {
-    Console.WriteLine($"Excepción controlada: {ex.Message}");
+    Console.WriteLine(ex.Message);
 }
 
 Console.WriteLine("\n==============================================");
@@ -206,6 +212,37 @@ else
     Console.WriteLine("El producto no fue encontrado.");
 }
 
-Console.WriteLine("\nCATÁLOGO DESPUÉS DE LA ELIMINACIÓN\n");
+Console.WriteLine("\n==============================================");
+Console.WriteLine("PRUEBA DE SKU INEXISTENTE");
+Console.WriteLine("==============================================");
+
+try
+{
+    inventario.BuscarPorSKU(9999);
+}
+catch (KeyNotFoundException ex)
+{
+    Console.WriteLine($"Excepción controlada: {ex.Message}");
+}
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine("CATÁLOGO FINAL");
+Console.WriteLine("==============================================\n");
 
 inventario.MostrarProductos();
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine("HISTORIAL CRONOLÓGICO DE AUDITORÍA");
+Console.WriteLine("==============================================");
+
+auditoria.ImprimirHistorial();
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine("HISTORIAL INVERSO DE AUDITORÍA");
+Console.WriteLine("==============================================");
+
+auditoria.ImprimirHistorialInverso();
+
+Console.WriteLine("\n==============================================");
+Console.WriteLine($"TOTAL DE REGISTROS DE AUDITORÍA: {auditoria.TotalRegistros}");
+Console.WriteLine("==============================================");
