@@ -35,7 +35,8 @@ public class InventarioLista
     }
 
     /// <summary>
-    /// Inserta un producto manteniendo la lista ordenada por precio ascendente.
+    /// Inserta un producto manteniendo la lista ordenada
+    /// por precio ascendente.
     /// </summary>
     public void InsertarOrdenado(Producto producto)
     {
@@ -77,7 +78,7 @@ public class InventarioLista
     }
 
     /// <summary>
-    /// Busca un producto por su SKU.
+    /// Busca un producto mediante su SKU.
     /// </summary>
     public Producto BuscarPorSKU(int sku)
     {
@@ -98,10 +99,19 @@ public class InventarioLista
     }
 
     /// <summary>
-    /// Modifica el precio de un producto.
+    /// Modifica el precio de un producto mediante su SKU.
     /// </summary>
-    public void ModificarPrecio(int sku, double nuevoPrecio)
+    public void ModificarPrecio(
+        int sku,
+        double nuevoPrecio)
     {
+        if (nuevoPrecio < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(nuevoPrecio),
+                "El precio no puede ser negativo.");
+        }
+
         NodoProducto? actual = _cabeza;
 
         while (actual != null)
@@ -110,12 +120,14 @@ public class InventarioLista
             {
                 Producto productoActual = actual.Data;
 
-                double precioAnterior = productoActual.Precio;
+                double precioAnterior =
+                    productoActual.Precio;
 
-                productoActual.Precio = nuevoPrecio;
+                productoActual.Precio =
+                    nuevoPrecio;
 
-                // Se vuelve a guardar el producto modificado en el nodo.
-                actual.Data = productoActual;
+                actual.Data =
+                    productoActual;
 
                 RegistrarAuditoriaSegura(
                     "UPDATE",
@@ -135,6 +147,120 @@ public class InventarioLista
     }
 
     /// <summary>
+    /// Modifica el stock real de un producto mediante su SKU.
+    /// </summary>
+    public void ModificarStock(
+        int sku,
+        int nuevoStock,
+        string motivo)
+    {
+        if (nuevoStock < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(nuevoStock),
+                "El stock no puede ser negativo.");
+        }
+
+        NodoProducto? actual = _cabeza;
+
+        while (actual != null)
+        {
+            if (actual.Data.SKU == sku)
+            {
+                Producto productoActual =
+                    actual.Data;
+
+                int stockAnterior =
+                    productoActual.Stock;
+
+                productoActual.Stock =
+                    nuevoStock;
+
+                actual.Data =
+                    productoActual;
+
+                RegistrarAuditoriaSegura(
+                    "UPDATE_STOCK",
+                    sku,
+                    $"Stock de '{productoActual.Nombre}' actualizado " +
+                    $"de {stockAnterior} a {nuevoStock}. " +
+                    $"Motivo: {motivo}."
+                );
+
+                return;
+            }
+
+            actual = actual.Siguiente;
+        }
+
+        throw new KeyNotFoundException(
+            $"El producto con SKU {sku} no fue encontrado.");
+    }
+
+    /// <summary>
+    /// Incrementa el stock actual de un producto.
+    /// Este método se utiliza principalmente al procesar devoluciones.
+    /// </summary>
+    public void IncrementarStock(
+        int sku,
+        int cantidad,
+        string motivo)
+    {
+        if (cantidad <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(cantidad),
+                "La cantidad debe ser mayor que cero.");
+        }
+
+        Producto producto =
+            BuscarPorSKU(sku);
+
+        int nuevoStock =
+            producto.Stock + cantidad;
+
+        ModificarStock(
+            sku,
+            nuevoStock,
+            motivo);
+    }
+
+    /// <summary>
+    /// Decrementa el stock actual de un producto.
+    /// </summary>
+    public void DecrementarStock(
+        int sku,
+        int cantidad,
+        string motivo)
+    {
+        if (cantidad <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(cantidad),
+                "La cantidad debe ser mayor que cero.");
+        }
+
+        Producto producto =
+            BuscarPorSKU(sku);
+
+        if (producto.Stock < cantidad)
+        {
+            throw new InvalidOperationException(
+                $"Stock insuficiente para SKU {sku}. " +
+                $"Disponible: {producto.Stock}. " +
+                $"Requerido: {cantidad}.");
+        }
+
+        int nuevoStock =
+            producto.Stock - cantidad;
+
+        ModificarStock(
+            sku,
+            nuevoStock,
+            motivo);
+    }
+
+    /// <summary>
     /// Elimina un producto utilizando su SKU.
     /// </summary>
     public bool EliminarPorSKU(int sku)
@@ -146,9 +272,11 @@ public class InventarioLista
 
         if (_cabeza.Data.SKU == sku)
         {
-            string nombreEliminado = _cabeza.Data.Nombre;
+            string nombreEliminado =
+                _cabeza.Data.Nombre;
 
-            _cabeza = _cabeza.Siguiente;
+            _cabeza =
+                _cabeza.Siguiente;
 
             RegistrarAuditoriaSegura(
                 "DELETE",
@@ -159,7 +287,8 @@ public class InventarioLista
             return true;
         }
 
-        NodoProducto actual = _cabeza;
+        NodoProducto actual =
+            _cabeza;
 
         while (actual.Siguiente != null)
         {
@@ -180,24 +309,29 @@ public class InventarioLista
                 return true;
             }
 
-            actual = actual.Siguiente;
+            actual =
+                actual.Siguiente;
         }
 
         return false;
     }
 
     /// <summary>
-    /// Muestra todos los productos del inventario.
+    /// Muestra todos los productos almacenados
+    /// en el inventario.
     /// </summary>
     public void MostrarProductos()
     {
         if (_cabeza == null)
         {
-            Console.WriteLine("El inventario está vacío.");
+            Console.WriteLine(
+                "El inventario está vacío.");
+
             return;
         }
 
-        NodoProducto? actual = _cabeza;
+        NodoProducto? actual =
+            _cabeza;
 
         Console.WriteLine(
             "SKU\tNombre\t\tPrecio\t\tStock\tProveedor");
@@ -207,7 +341,8 @@ public class InventarioLista
 
         while (actual != null)
         {
-            Producto producto = actual.Data;
+            Producto producto =
+                actual.Data;
 
             Console.WriteLine(
                 $"{producto.SKU}\t" +
@@ -216,13 +351,14 @@ public class InventarioLista
                 $"{producto.Stock}\t" +
                 $"{producto.DatosProveedor.NombreCorporativo}");
 
-            actual = actual.Siguiente;
+            actual =
+                actual.Siguiente;
         }
     }
 
     /// <summary>
-    /// Registra la operación en la bitácora sin detener
-    /// la operación principal si ocurre un error de auditoría.
+    /// Registra una operación en la bitácora sin permitir
+    /// que un error de auditoría detenga la operación principal.
     /// </summary>
     private void RegistrarAuditoriaSegura(
         string tipoOperacion,
